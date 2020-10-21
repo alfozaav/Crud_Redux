@@ -3,8 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 
 //  Actions de redux
 import { crearNuevoProductoAction } from '../actions/productoActions';
+import { mostrarAlerta, ocultarAlertaAction } from '../actions/alertaActions';
 
-const NuevoProducto = () => {
+const NuevoProducto = ({history}) => {
 
     //  State del componente
     const [nombre, guardarNombre] = useState('');
@@ -12,6 +13,13 @@ const NuevoProducto = () => {
 
     //  Utilizar useDispatch y te devuelve una función
     const dispatch = useDispatch();
+
+    //  Acceder al state del store
+    const cargando = useSelector( state => state.productos.loading );
+    const error = useSelector( state => state.productos.error );
+    const alerta = useSelector( state => state.alerta.alerta );
+
+    console.log(cargando)
 
     //  Mandar llamar el action de producto action
     const agregarProducto = (producto) => dispatch( crearNuevoProductoAction(producto) );
@@ -22,16 +30,30 @@ const NuevoProducto = () => {
 
         //  Validar formulario
         if (nombre.trim() === '' || precio <= 0) {
+
+            const alerta = {
+                msg: 'Ambos campos son obligatorios',
+                classes: 'alert alert-danger text-center text-uppercase p3'
+            }
+            
+            dispatch( mostrarAlerta(alerta) );
+
             return;
         }
 
         //  Si no hay errores
+        dispatch( ocultarAlertaAction() );
 
         //  Crear el nuevo producto
         agregarProducto({
             nombre,
             precio
         });
+
+        //  Redireccionar al Home
+        history.push('/');
+        //  Envía hacia el componente principal, history está disponible en react-router por defecto
+        //  y tiene acceso a todos los componentes que están en routing
     }
 
     return ( 
@@ -42,6 +64,9 @@ const NuevoProducto = () => {
                         <h2 className="text-center mb-4 font-weight-bold">
                             Agregar Nuevo Producto
                         </h2>
+
+                        { alerta ? <p className={alerta.classes}> {alerta.msg} </p> :  null }
+
                         <form
                             onSubmit={submitNuevoProducto}
                         >
@@ -56,7 +81,7 @@ const NuevoProducto = () => {
                             </div>
                             <div className="form-group">
                                 <label>Precio Producto</label>
-                                <input type="number" className="form-control"
+                                <input type="text" className="form-control"
                                     placeholder="Precio Producto" 
                                     name="precio" 
                                     value={precio}
@@ -67,6 +92,8 @@ const NuevoProducto = () => {
                                 Agregar
                             </button>
                         </form>
+                        { cargando ? <p>Cargando...</p> : null }
+                        {error ? <p className="alert alert-danger p2 mt-4 text-center">Hubo un error</p> : null}
                     </div>
                 </div>
             </div>
